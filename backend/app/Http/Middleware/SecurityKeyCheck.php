@@ -16,13 +16,12 @@ class SecurityKeyCheck
      */
     public function handle(Request $request, Closure $next)
     {
-        if ($request->header("Security") !== config("auth.security_key")) {
+        if ($request->header("Security") !== env("SECURITY_KEY")) {
             return response()->json(
                 ["messages" => "Invalid security key."],
                 400
             );
         }
-
         return $next($request);
     }
 }

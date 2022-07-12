@@ -22,12 +22,13 @@ class AuthServiceProvider extends ServiceProvider
 
     public static function checkAuth($token)
     {
+        info($token);
         $response = Http::retry(3, 100)
             ->withHeaders([
                 "Authorization" => $token,
             ])
-            ->get(config("auth.check_auth_url"));
-
+            ->get(env("CHECK_AUTH_URL"));
+        info($response->body());
         return json_decode($response->body(), true);
     }
 
