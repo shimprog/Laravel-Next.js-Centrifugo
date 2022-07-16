@@ -1,0 +1,32 @@
+.right-text{
+    text-align: right;
+}
+.flex-row{
+    display: flex;
+    flex-direction: row;
+}
+.logo{
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    cursor: pointer;
+}
+.bread{
+    margin-top: 15px;
+    margin-bottom: 15px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    cursor: pointer;
+    justify-content: center;
+}
+.link{
+    text-decoration: none;
+    color: #5b5b5b;
+}
+.color-main{
+    color: rgb(25, 117, 209);
+}
+.margin-right{
+    margin-left: 10px;
+}

@@ -1,65 +1,95 @@
 import Head from 'next/head'
+import {useContext, useEffect, useState} from "react";
+import {TextField} from "@mui/material";
+import Cookies from "js-cookie";
+import CentrifugeContext from "../contexts/Centrifuge";
+import Centrifuge from "centrifuge";
+import {useRouter} from "next/router";
 
 export default function Home() {
-  return (
-    <div className="container">
-      <Head>
-        <title>Create Next App</title>
-        <link rel="icon" href="/favicon.ico" />
-      </Head>
+    const [name, setName] = useState('');
+    const router = useRouter()
+    const handleChange = (event) => {
+        setName(event.target.value);
+    };
+    const [go, setGo] = useState(false)
+    const [error, setError] = useState(false)
 
-      <main>
-        <h1 className="title">
-          Welcome to <a href="https://nextjs.org">Next.js!</a>
-        </h1>
+    const [centrifugeContext, setCentrifugeContext] = useContext(CentrifugeContext)
 
-        <p className="description">
-          Get started by editing <code>pages/index.js</code>
-        </p>
+    useEffect(async () => {
+        if (!!go && !!name) {
+            setError(false)
+            try {
+                const request = await fetch(`${process.env.NEXT_PUBLIC_BACK_MAIN}/api/register`, {
+                    headers: {
+                        'Authorization': `Bearer ${name}`,
+                        'Security': `${process.env.NEXT_PUBLIC_SECURITY_KEY}`
+                    }
+                })
+                console.log(request.status)
+                const response = await request.text()
+                if (request.status === 200) {
+                    Cookies.set('token-socket', response)
+                    let centrifuge = new Centrifuge('ws://localhost:8081/connection/websocket');
 
-        <div className="grid">
-          <a href="https://nextjs.org/docs" className="card">
-            <h3>Documentation &rarr;</h3>
-            <p>Find in-depth information about Next.js features and API.</p>
-          </a>
+                    centrifuge.setToken(response);
 
-          <a href="https://nextjs.org/learn" className="card">
-            <h3>Learn &rarr;</h3>
-            <p>Learn about Next.js in an interactive course with quizzes!</p>
-          </a>
+                    centrifuge.subscribe("channel", function (message) {
+                        console.log(message);
+                    });
 
-          <a
-            href="https://github.com/vercel/next.js/tree/master/examples"
-            className="card"
-          >
-            <h3>Examples &rarr;</h3>
-            <p>Discover and deploy boilerplate example Next.js projects.</p>
-          </a>
+                    centrifuge.connect();
+                    setCentrifugeContext(centrifuge)
+                    await router.push('/chats')
+                }
+            } catch (e) {
+                setError(true)
+            } finally {
+                setGo(false)
+            }
 
-          <a
-            href="https://vercel.com/import?filter=next.js&utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-            className="card"
-          >
-            <h3>Deploy &rarr;</h3>
-            <p>
-              Instantly deploy your Next.js site to a public URL with Vercel.
-            </p>
-          </a>
-        </div>
-      </main>
+        }
+    }, [go, name]);
 
-      <footer>
-        <a
-          href="https://vercel.com?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Powered by{' '}
-          <img src="/vercel.svg" alt="Vercel" className="logo" />
-        </a>
-      </footer>
 
-      <style jsx>{`
+    return (
+        <div className="container">
+            <Head>
+                <title>Create Next App</title>
+                <link rel="icon" href="/favicon.ico"/>
+            </Head>
+
+            <main>
+                <h1 className="title">
+                    Welcome to CHAT!
+                </h1>
+
+                <p className="description">
+                    Insert the token here ↓
+                </p>
+                <TextField
+                    id="outlined-name"
+                    label="Token"
+                    value={name}
+                    onChange={handleChange}
+                    onBlur={() => setGo(true)}
+                    error={!!error}
+                />
+            </main>
+
+            <footer>
+                <a
+                    href="https://vercel.com?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                >
+                    Powered by{' '}
+                    <img src="/vercel.svg" alt="Vercel" className="logo"/>
+                </a>
+            </footer>
+
+            <style jsx>{`
         .container {
           min-height: 100vh;
           padding: 0 0.5rem;
@@ -122,6 +152,7 @@ export default function Home() {
         .title,
         .description {
           text-align: center;
+          align-items: center;
         }
 
         .description {
@@ -190,7 +221,7 @@ export default function Home() {
         }
       `}</style>
 
-      <style jsx global>{`
+            <style jsx global>{`
         html,
         body {
           padding: 0;
@@ -204,6 +235,6 @@ export default function Home() {
           box-sizing: border-box;
         }
       `}</style>
-    </div>
-  )
+        </div>
+    )
 }
